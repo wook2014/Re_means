@@ -1,23 +1,21 @@
 # Remeans
 
-`Remeans` implements e-means clustering for dense numeric data in R. The bundled
-Rust backend supports parallel CPU training and prediction. The R and Rust
-code is adapted from [ToledoEM/emeansR](https://github.com/ToledoEM/emeansR) and
-follows the [Faiss e-means reference](https://github.com/facebookresearch/faiss/tree/main/contrib/e_means).
+`Remeans` implements e-means clustering for dense numeric data in R. The Rcpp
+training loop uses Faiss's C++ `knn_L2sqr()` with one neighbor for Euclidean
+assignment, and `knn_inner_product()` for spherical assignment. The training
+rules follow the [Faiss e-means reference](https://github.com/facebookresearch/faiss/tree/main/contrib/e_means).
 
 ## Install from GitHub
 
-Source installation needs Rust (`cargo` and `rustc`) and the usual R package
-build tools. The source includes the Rust crates, so Cargo builds offline.
-On Windows x64 with R 4.3.2, install Rtools43 and run
-`rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal`
-in a terminal.
+Source installation uses a C++20 toolchain, OpenMP and a BLAS library with
+single-precision routines. The package includes the Faiss 1.11.0 source and
+compiles its CPU distance kernels during installation. On Windows x64 with
+R 4.3.2, install Rtools43 in its default location. On Linux, provide the
+development package for system BLAS. The compiler used by R must support
+OpenMP on macOS.
 
 ```r
 # install.packages("remotes")
-if (.Platform$OS.type == "windows" && R.version$arch == "x86_64") {
-  Sys.setenv(RUSTUP_TOOLCHAIN = "stable-x86_64-pc-windows-gnu")
-}
 remotes::install_github("wook2014/Re_means")
 ```
 
@@ -39,6 +37,9 @@ Supply a numeric matrix or data frame with one observation per row and one
 feature per column. `centers` accepts a cluster count or an initial center
 matrix. `nepochs = 5` is the default and fractional epoch budgets are supported.
 See `?e_means` for options such as `batch_law`, `precision`, and `n_threads`.
+Faiss searches in float32 in both precision modes. `precision = "double"`
+uses the original R values for centroid updates, while `"single"` uses the
+float32 values. Both modes accumulate centroid sums in double precision.
 
 The result provides the usual `kmeans()` fields, including `cluster`, `centers`,
 `size`, and `tot.withinss`. By default, one extra assignment pass labels every

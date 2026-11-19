@@ -1,5 +1,6 @@
 #' @useDynLib Remeans, .registration = TRUE
 #' @importFrom stats predict fitted
+#' @importFrom Rcpp evalCpp
 #' @keywords internal
 "_PACKAGE"
 
@@ -16,9 +17,14 @@ as_data_matrix <- function(x, what = "x") {
 
 # Threads: argument, option, cores
 default_threads <- function(n_threads) {
-  if (!is.null(n_threads)) return(max(1L, as.integer(n_threads)))
-  opt <- getOption("Remeans.threads")
-  if (!is.null(opt)) return(max(1L, as.integer(opt)))
+  if (is.null(n_threads)) n_threads <- getOption("Remeans.threads")
+  if (!is.null(n_threads)) {
+    n_threads <- as.integer(n_threads)
+    if (length(n_threads) != 1L || is.na(n_threads)) {
+      stop("`n_threads` must specify one finite thread count.", call. = FALSE)
+    }
+    return(max(1L, n_threads))
+  }
   cores <- max(1L, parallel::detectCores(logical = FALSE) - 1L, na.rm = TRUE)
   # R CMD check --as-cran sets this; CRAN allows at most two cores.
   limit <- tolower(Sys.getenv("_R_CHECK_LIMIT_CORES_", ""))
@@ -66,14 +72,11 @@ check_unit_rows <- function(x) {
 #'   must already be unit-norm; centers are returned as unit vectors.
 #' @param max_points_per_centroid If set, cap the training sample at this
 #'   many rows per requested cluster, drawn at random.
-#' @param precision `"double"`, or `"single"` to store the training data and
-#'   compute distances in float32. Batch
-#'   statistics, centroids and masses always accumulate in double precision,
-#'   and `withinss` is computed from the original data. As in the faiss FP32
-#'   path, single precision assigns poorly when the data sit far from the
-#'   origin (the error grows with the squared norm of the rows); centre the
-#'   data first, e.g. with `scale(x, scale = FALSE)`. Double precision hits
-#'   the same limit at offsets around 1e8.
+#' @param precision Input precision for centroid updates. `"double"` uses
+#'   the original R values and `"single"` uses the float32 representation.
+#'   Faiss searches float32 vectors in both modes. Center Euclidean data
+#'   with large offsets before training if small differences matter.
+#'   Centroid sums and `withinss` are computed in double precision.
 #' @param final_assign If `TRUE` (default), assign every row of `x` to the
 #'   final centers, so `cluster`, `withinss` and `size` describe the returned
 #'   centers (as [stats::kmeans()]). If `FALSE`, `cluster` holds labels from
@@ -135,6 +138,10 @@ e_means <- function(x, centers, nepochs = 5, final_assign = TRUE,
   if (spherical) check_unit_rows(x)
   threads <- default_threads(n_threads)
   seed <- as.numeric(seed)
+  if (length(seed) != 1L || !is.finite(seed) || seed != trunc(seed) ||
+      abs(seed) >= 2^53) {
+    stop("`seed` must be an integer with magnitude below 2^53.", call. = FALSE)
+  }
 
   # Optional training subset
   keep <- NULL
@@ -163,45 +170,23 @@ e_means <- function(x, centers, nepochs = 5, final_assign = TRUE,
                     if (spherical) ", spherical" else ""))
   }
 
-  # Rust data and state
-  data <- em_data(xt, single)
-  st <- em_new(init, nt, spherical, single, recipe$batch_size, recipe$alpha0,
-               recipe$epoch_rows, recipe$unused_threshold, seed, threads)
-  # Train in chunks; allow interrupts
-  chunk_steps <- max(1, floor(2e9 / (recipe$batch_size * k * d)))
-  last_epoch <- 0
-  start <- proc.time()[["elapsed"]]
-  repeat {
-    done <- em_train_steps(st, data, chunk_steps, !final_assign)
-    if (verbose) {
-      # Report finished epochs
-      info <- em_info(st)
-      while (last_epoch < length(info$obj)) {
-        last_epoch <- last_epoch + 1
-        message(sprintf("  Epoch %d / %d (%.2f s): objective=%g, splits=%d",
-                        last_epoch, info$n_epochs, proc.time()[["elapsed"]] - start, # nolint: line_length_linter.
-                        info$obj[last_epoch], as.integer(info$nsplit[last_epoch]))) # nolint: line_length_linter.
-      }
-    }
-    if (done) break
-  }
-  rm(data)
-  # Exact closing centers
-  centers <- em_finalize(st)
-  info <- em_info(st)
+  info <- em_train(xt, init, recipe, spherical, single, seed, threads,
+                   capture_last = !final_assign,
+                   assign_final = final_assign && is.null(keep),
+                   verbose = verbose)
+  centers <- info$centers
   colnames(centers) <- colnames(x)
 
   # Labels: reassign or last pass
   dist2 <- NULL
   if (final_assign) {
-    a <- em_assign(centers, x, spherical, single, threads)
+    a <- if (is.null(keep)) info$assignment else em_assign(centers, x, spherical, threads)
     cluster <- a$cluster
     # Spherical gives similarities
     if (!spherical) dist2 <- a$distance
   } else {
-    labels <- em_labels(st)
     cluster <- rep(NA_integer_, n)
-    cluster[if (is.null(keep)) seq_len(n) else keep] <- labels
+    cluster[if (is.null(keep)) seq_len(n) else keep] <- info$cluster
   }
   new_emeans(x, centers, cluster, k, recipe, info, spherical, precision, dist2)
 }
@@ -286,8 +271,7 @@ predict.remeans <- function(
 
   # Nearest center per row
   newdata <- as_data_matrix(newdata, "newdata")
-  res <- em_assign(object$centers, newdata, object$spherical,
-                   object$precision == "single", default_threads(n_threads))
+  res <- em_assign(object$centers, newdata, object$spherical, default_threads(n_threads))
   if (distance) data.frame(cluster = res$cluster, distance = res$distance) else res$cluster # nolint: line_length_linter.
 }
 

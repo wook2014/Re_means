@@ -52,14 +52,11 @@ otherwise. Set to 0 to disable revival.}
 \item{max_points_per_centroid}{If set, cap the training sample at this
 many rows per requested cluster, drawn at random.}
 
-\item{precision}{\code{"double"}, or \code{"single"} to store the training data and
-compute distances in float32. Batch
-statistics, centroids and masses always accumulate in double precision,
-and \code{withinss} is computed from the original data. As in the faiss FP32
-path, single precision assigns poorly when the data sit far from the
-origin (the error grows with the squared norm of the rows); centre the
-data first, e.g. with \code{scale(x, scale = FALSE)}. Double precision hits
-the same limit at offsets around 1e8.}
+\item{precision}{Input precision for centroid updates. \code{"double"} uses
+the original R values and \code{"single"} uses the float32 representation.
+Faiss searches float32 vectors in both modes. Center Euclidean data
+with large offsets before training if small differences matter.
+Centroid sums and \code{withinss} are computed in double precision.}
 
 \item{seed}{Integer seed for initialization, shuffling and revival.
 Does not touch R's random number generator.}

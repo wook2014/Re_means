@@ -9,6 +9,4 @@
 /src/*.so
 /src/*.dll
 /src/symbols.rds
-/src/.cargo/
-/src/rust/target/
-/src/rust/vendor/
+/src/.faiss/

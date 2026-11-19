@@ -1,0 +1,11 @@
+Faiss CPU distance kernels
+==========================
+
+faiss-1.11.0.tar.gz is the unmodified upstream release archive.
+Source: https://github.com/facebookresearch/faiss/releases/tag/v1.11.0
+SHA-256: c5d517da6deb6a6d74290d7145331fc7474426025e2d826fa4a6d40670f4493c
+
+src/Makevars.in selects the source files required by knn_L2sqr and
+knn_inner_product. r-compat.patch applies to the extracted build tree.
+It enables static linking and standard alignment on Windows and reports
+Faiss assertion failures as exceptions. The search algorithms are upstream.

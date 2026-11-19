@@ -1,0 +1,21 @@
+--- a/faiss/impl/platform_macros.h
++++ b/faiss/impl/platform_macros.h
+@@ -20 +20,3 @@
+-#ifdef FAISS_MAIN_LIB
++#if defined(FAISS_STATIC)
++#define FAISS_API
++#elif defined(FAISS_MAIN_LIB)
+@@ -37 +39 @@
+-#define ALIGNED(x) __declspec(align(x))
++#define ALIGNED(x) alignas(x)
+--- a/faiss/impl/FaissAssert.h
++++ b/faiss/impl/FaissAssert.h
+@@ -112,0 +113,8 @@
++// Report failed assertions as Faiss exceptions to the Rcpp caller.
++#undef FAISS_ASSERT
++#undef FAISS_ASSERT_MSG
++#undef FAISS_ASSERT_FMT
++#define FAISS_ASSERT(X) FAISS_THROW_IF_NOT(X)
++#define FAISS_ASSERT_MSG(X, MSG) FAISS_THROW_IF_NOT_MSG(X, MSG)
++#define FAISS_ASSERT_FMT(X, FMT, ...) FAISS_THROW_IF_NOT_FMT(X, FMT, __VA_ARGS__)
++

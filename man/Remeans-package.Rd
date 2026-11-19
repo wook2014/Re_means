@@ -6,7 +6,7 @@
 \alias{Remeans-package}
 \title{Remeans: E-Means Clustering for Large Datasets}
 \description{
-Fits e-means clustering models (Bessa et al. (2026) \doi{10.48550/arXiv.2611.09501}). The algorithm uses mini-batches, exponential moving averages, and scaling laws for the batch size and initial step size. A bundled Rust backend provides parallel CPU training and prediction.
+Fits e-means clustering models (Bessa et al. (2026) \doi{10.48550/arXiv.2611.09501}). The algorithm uses mini-batches, exponential moving averages, and scaling laws for the batch size and initial step size. The CPU backend uses 'Rcpp' and the bundled 'Faiss' C++ nearest-center search.
 }
 \seealso{
 Useful links:
@@ -26,8 +26,8 @@ Authors:
 
 Other contributors:
 \itemize{
-  \item Enrique Toledo (Original R and Rust implementation) [contributor, copyright holder]
-  \item Authors of the bundled Rust crates (see inst/AUTHORS) [contributor, copyright holder]
+  \item Enrique Toledo (Original R interface and training implementation) [contributor, copyright holder]
+  \item Meta Platforms, Inc. and affiliates (Bundled Faiss source) [copyright holder]
 }
 
 }

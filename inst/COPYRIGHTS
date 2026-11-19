@@ -1,8 +1,8 @@
 MIT License
 
 Copyright (c) 2026 wook2014
-Copyright (c) 2026 Enrique Toledo (R and Rust implementation adapted from emeansR)
-Copyright (c) Facebook, Inc. and its affiliates (Faiss Python reference)
+Copyright (c) 2026 Enrique Toledo (R interface and training implementation adapted from emeansR)
+Copyright (c) Meta Platforms, Inc. and affiliates (Faiss Python reference and bundled C++ source)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +22,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-The R and Rust implementation was adapted from ToledoEM/emeansR at commit
+The R interface and C++ training implementation were adapted using ToledoEM/emeansR at commit
 fc14a08d9c8cb3337c45f3adc6258bdc261dbad9.
 https://github.com/ToledoEM/emeansR
 
 The Faiss reference remains in the Git repository.
 https://github.com/facebookresearch/faiss/tree/main/contrib/e_means
 
-The bundled Rust crates are listed in AUTHORS. Their license files are
-included in the source package in src/rust/vendor.tar.xz.
+The unmodified Faiss 1.11.0 archive is included in src/vendor. See
+FAISS-LICENSE and the notices in the archive for copyright and license details.

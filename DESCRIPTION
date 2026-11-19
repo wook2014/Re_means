@@ -1,26 +1,25 @@
 Package: Remeans
 Title: E-Means Clustering for Large Datasets
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("wook2014", email = "wook20120711@gmail.com", role = c("aut", "cre", "cph")),
     person("Enrique", "Toledo", role = c("ctb", "cph"),
-           comment = "Original R and Rust implementation"),
-    person("Authors of the bundled Rust crates", role = c("ctb", "cph"),
-           comment = "see inst/AUTHORS"))
+           comment = "Original R interface and training implementation"),
+    person("Meta Platforms, Inc. and affiliates", role = "cph",
+           comment = "Bundled Faiss source"))
 Description: Fits e-means clustering models (Bessa et al. (2026)
     <doi:10.48550/arXiv.2611.09501>). The algorithm uses mini-batches,
     exponential moving averages, and scaling laws for the batch size and
-    initial step size. A bundled Rust backend provides parallel CPU training
-    and prediction.
+    initial step size. The CPU backend uses 'Rcpp' and the bundled 'Faiss'
+    C++ nearest-center search.
 License: MIT + file LICENSE
 URL: https://github.com/wook2014/Re_means
 BugReports: https://github.com/wook2014/Re_means/issues
-Copyright: The bundled Rust crates are copyright their respective authors;
-    see inst/AUTHORS.
 Encoding: UTF-8
 Depends: R (>= 4.1.0)
-Imports: parallel, stats, utils
-SystemRequirements: Cargo, rustc (>= 1.71), GNU make
+Imports: parallel, Rcpp (>= 1.1.0), stats, utils
+LinkingTo: Rcpp
+SystemRequirements: C++20, OpenMP, BLAS, GNU make, tar, patch
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0

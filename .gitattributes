@@ -6,4 +6,5 @@
 /cleanup.win text eol=lf
 /tools/*.sh text eol=lf
 /src/Makevars*.in text eol=lf
-/src/rust/vendor.tar.xz binary
+/src/vendor/*.tar.gz binary
+/src/vendor/*.patch text eol=lf
