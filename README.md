@@ -1,13 +1,62 @@
-<p align="center">
-  <img src="figure/emeans-wordmark-framed.png" alt="e-means" width="70%">
-</p>
+# Remeans
 
-# e-means: outperforming k-means in one-tenth the epochs
+`Remeans` implements e-means clustering for dense numeric data in R. The bundled
+Rust backend supports parallel CPU training and prediction. The R and Rust
+code is adapted from [ToledoEM/emeansR](https://github.com/ToledoEM/emeansR) and
+follows the [Faiss e-means reference](https://github.com/facebookresearch/faiss/tree/main/contrib/e_means).
 
-[arXiv](https://arxiv.org/abs/2611.09501) · Blog post link (soon) · [Browser demo](https://e-means.github.io/playground.html) · Reproduction scripts ([`benchs/e_means`](https://github.com/facebookresearch/faiss/tree/main/benchs/e_means))
+## Install from GitHub
+
+Source installation needs Rust (`cargo` and `rustc`) and the usual R package
+build tools. The source includes the Rust crates, so Cargo builds offline.
+On Windows x64 with R 4.3.2, install Rtools43 and run
+`rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal`
+in a terminal.
+
+```r
+# install.packages("remotes")
+if (.Platform$OS.type == "windows" && R.version$arch == "x86_64") {
+  Sys.setenv(RUSTUP_TOOLCHAIN = "stable-x86_64-pc-windows-gnu")
+}
+remotes::install_github("wook2014/Re_means")
+```
+
+To install from a local checkout, run `R CMD INSTALL .` from the repository
+root with the same build tools.
+
+## R quick start
+
+```r
+library(Remeans)
+x <- as.matrix(iris[, 1:4])
+fit <- e_means(x, centers = 3, seed = 1234, n_threads = 1)
+fit$centers
+fit$tot.withinss / nrow(x)
+predict(fit, x[1:5, , drop = FALSE])
+```
+
+Supply a numeric matrix or data frame with one observation per row and one
+feature per column. `centers` accepts a cluster count or an initial center
+matrix. `nepochs = 5` is the default and fractional epoch budgets are supported.
+See `?e_means` for options such as `batch_law`, `precision`, and `n_threads`.
+
+The result provides the usual `kmeans()` fields, including `cluster`, `centers`,
+`size`, and `tot.withinss`. By default, one extra assignment pass labels every
+row by its nearest final center. Set `final_assign = FALSE` to retain the labels
+from the moving final training pass, as Faiss does. In that mode, rows outside
+the training subset or a partial-only pass can have `NA` labels. The centers
+are still based on the final training pass in both modes. `fit$obj` tracks
+loss during training while centers are moving.
+
+Run `Rscript tools/benchmark.R` from the repository root to compare CPU runtime and
+held-out nearest-center MSE with Lloyd and Hartigan–Wong k-means. Each seed uses
+the same initial centers for all methods, and e-means uses one thread.
+
+## Faiss Python reference
+
+[Paper](https://arxiv.org/abs/2611.09501) · [Browser demo](https://e-means.github.io/playground.html) · [Reproduction scripts](https://github.com/facebookresearch/faiss/tree/main/benchs/e_means)
 
 Code contributors: Gergely Szilvasy, Swann Bessa, Matthijs Douze
-
 
 ## What e-means is
 

@@ -1,0 +1,14 @@
+/.Rhistory
+/.RData
+/Remeans.Rcheck/
+/Remeans_*.tar.gz
+/Remeans_*.zip
+/src/Makevars
+/src/Makevars.win
+/src/*.o
+/src/*.so
+/src/*.dll
+/src/symbols.rds
+/src/.cargo/
+/src/rust/target/
+/src/rust/vendor/

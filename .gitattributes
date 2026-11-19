@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+/configure text eol=lf
+/configure.win text eol=lf
+/cleanup text eol=lf
+/cleanup.win text eol=lf
+/tools/*.sh text eol=lf
+/src/Makevars*.in text eol=lf
+/src/rust/vendor.tar.xz binary

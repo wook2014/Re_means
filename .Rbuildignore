@@ -1,0 +1,8 @@
+^[^/]+\.py$
+^ivf_flat\.md$
+^tools/benchmark\.R$
+^src/Makevars(\.win)?$
+^src/rust/(target|vendor)$
+^src/\.cargo$
+^Remeans_.*\.(tar\.gz|zip)$
+^Remeans\.Rcheck$
